@@ -3,19 +3,26 @@
 <head>
     <title>Tic Tac Toe</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap');
+        
         body {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0f0f0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Poppins', sans-serif;
         }
         .canvas-container {
             position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            background: white;
         }
         canvas {
-            border: 1px solid black;
+            display: block;
         }
         #game-over {
             display: none;
@@ -24,52 +31,90 @@
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            font-family: Arial, sans-serif;
-            font-size: 40px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 48px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.7);
+            padding: 20px 40px;
+            border-radius: 15px;
+            z-index: 10;
         }
         #restart-btn {
             display: none;
             position: absolute;
-            top: 60%;
+            top: 65%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 200px;
-            height: 50px;
-            background-color: #ccc;
-            border: 2px solid black;
-            border-radius: 5px;
-            font-family: Arial, sans-serif;
-            font-size: 20px;
+            width: 220px;
+            height: 60px;
+            background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+            border: none;
+            border-radius: 30px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 22px;
+            font-weight: 600;
+            color: white;
             cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 10;
         }
         #restart-btn:hover {
-            background-color: #b4b4b4;
+            transform: translate(-50%, -50%) scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
         #choice-screen {
             position: absolute;
-            top: 30%;
+            top: 50%;
             left: 50%;
-            transform: translate(-50%, -30%);
-            background-color: white;
-            border: 2px solid black;
-            border-radius: 10px;
-            padding: 30px;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
             text-align: center;
-            font-family: Arial, sans-serif;
-            font-size: 24px;
+            font-family: 'Poppins', sans-serif;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            z-index: 20;
+            width: 400px;
+            max-width: 90%;
+        }
+        #choice-screen div {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: #333;
         }
         .choice-button {
-            margin-top: 20px;
-            width: 200px;
-            height: 50px;
+            margin: 15px auto;
+            width: 250px;
+            height: 60px;
             font-size: 20px;
+            font-weight: 600;
             cursor: pointer;
-            border-radius: 5px;
-            border: 2px solid black;
-            background-color: #ddd;
+            border-radius: 30px;
+            border: none;
+            color: white;
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            display: block;
         }
         .choice-button:hover {
-            background-color: #c5c5c5;
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+        .canvas-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            z-index: 0;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -77,11 +122,11 @@
     <div class="canvas-container">
         <canvas id="game" width="600" height="600"></canvas>
         <div id="game-over"></div>
-        <button id="restart-btn">Restart</button>
+        <button id="restart-btn">Play Again</button>
         <div id="choice-screen">
-            <div>Do you want to go first?</div>
-            <button id="human-first" class="choice-button">Yes (You First)</button>
-            <button id="ai-first" class="choice-button">No (AI First)</button>
+            <div>Who should go first?</div>
+            <button id="human-first" class="choice-button">I'll Start (X)</button>
+            <button id="ai-first" class="choice-button">AI Starts (O)</button>
         </div>
     </div>
     <script>
@@ -159,9 +204,9 @@
         }
 
         function drawBoard() {
-            ctx.fillStyle = 'white';
+            ctx.fillStyle = '#f8f9fa';
             ctx.fillRect(0, 0, 600, 600);
-            ctx.strokeStyle = 'black';
+            ctx.strokeStyle = '#dee2e6';
             ctx.lineWidth = LINE_WIDTH;
             for (let i = 1; i < GRID_SIZE; i++) {
                 ctx.beginPath();
@@ -193,8 +238,9 @@
             const startY = row * CELL_SIZE + margin;
             const endX = (col + 1) * CELL_SIZE - margin;
             const endY = (row + 1) * CELL_SIZE - margin;
-            ctx.strokeStyle = 'red';
+            ctx.strokeStyle = '#ff4757';
             ctx.lineWidth = LINE_WIDTH;
+            ctx.lineCap = 'round';
             ctx.beginPath();
             ctx.moveTo(startX, startY);
             ctx.lineTo(endX, endY);
@@ -208,8 +254,8 @@
         function drawO(row, col) {
             const centerX = col * CELL_SIZE + CELL_SIZE / 2;
             const centerY = row * CELL_SIZE + CELL_SIZE / 2;
-            const radius = CELL_SIZE / 4;
-            ctx.strokeStyle = 'blue';
+            const radius = CELL_SIZE / 3;
+            ctx.strokeStyle = '#2ed573';
             ctx.lineWidth = LINE_WIDTH;
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
@@ -222,11 +268,11 @@
             gameOverDiv.style.display = 'block';
             restartBtn.style.display = 'block';
             if (winner === 'X') {
-                gameOverDiv.innerText = 'Player wins!';
+                gameOverDiv.innerText = 'You Win! 🎉';
             } else if (winner === 'O') {
-                gameOverDiv.innerText = 'AI wins!';
+                gameOverDiv.innerText = 'AI Wins! 🤖';
             } else {
-                gameOverDiv.innerText = 'Tie!';
+                gameOverDiv.innerText = "It's a Tie! 🤝";
             }
         }
 
@@ -282,16 +328,15 @@
         });
 
         document.getElementById('ai-first').addEventListener('click', () => {
-    document.getElementById('choice-screen').style.display = 'none';
-    let empty = getEmptyCells(board);
-    if (empty.length > 0) {
-        let randomIndex = Math.floor(Math.random() * empty.length);
-        let [row, col] = empty[randomIndex];
-        board[row][col] = 'O';
-    }
-    drawBoard();
-});
-
+            document.getElementById('choice-screen').style.display = 'none';
+            let empty = getEmptyCells(board);
+            if (empty.length > 0) {
+                let randomIndex = Math.floor(Math.random() * empty.length);
+                let [row, col] = empty[randomIndex];
+                board[row][col] = 'O';
+            }
+            drawBoard();
+        });
 
         drawBoard();
     </script>
