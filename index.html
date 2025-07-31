@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tic Tac Toe</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .canvas-container {
+            position: relative;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+        #game-over {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            font-family: Arial, sans-serif;
+            font-size: 40px;
+        }
+        #restart-btn {
+            display: none;
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 50px;
+            background-color: #ccc;
+            border: 2px solid black;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        #restart-btn:hover {
+            background-color: #b4b4b4;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas-container">
+        <canvas id="game" width="600" height="600"></canvas>
+        <div id="game-over"></div>
+        <button id="restart-btn">Restart</button>
+    </div>
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const GRID_SIZE = 3;
+        const CELL_SIZE = 600 / GRID_SIZE;
+        const LINE_WIDTH = 15;
+        let board = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']];
+        let gameOver = false;
+        let winner = null;
+
+        function isWinner(board, player) {
+            for (let i = 0; i < 3; i++) {
+                if (board[i].every(cell => cell === player)) return true;
+                if (board.every(row => row[i] === player)) return true;
+            }
+            if (board.every((row, i) => row[i] === player)) return true;
+            if (board.every((row, i) => row[2 - i] === player)) return true;
+            return false;
+        }
+
+        function isBoardFull(board) {
+            return board.every(row => row.every(cell => cell !== ' '));
+        }
+
+        function getEmptyCells(board) {
+            let cells = [];
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if (board[i][j] === ' ') cells.push([i, j]);
+                }
+            }
+            return cells;
+        }
+
+        function minimax(board, depth, isMaximizing) {
+            if (isWinner(board, 'O')) return 1;
+            if (isWinner(board, 'X')) return -1;
+            if (isBoardFull(board)) return 0;
+            if (isMaximizing) {
+                let bestScore = -Infinity;
+                for (let [row, col] of getEmptyCells(board)) {
+                    board[row][col] = 'O';
+                    let score = minimax(board, depth + 1, false);
+                    board[row][col] = ' ';
+                    bestScore = Math.max(bestScore, score);
+                }
+                return bestScore;
+            } else {
+                let bestScore = Infinity;
+                for (let [row, col] of getEmptyCells(board)) {
+                    board[row][col] = 'X';
+                    let score = minimax(board, depth + 1, true);
+                    board[row][col] = ' ';
+                    bestScore = Math.min(bestScore, score);
+                }
+                return bestScore;
+            }
+        }
+
+        function bestMove(board) {
+            let bestScore = -Infinity;
+            let move = null;
+            for (let [row, col] of getEmptyCells(board)) {
+                board[row][col] = 'O';
+                let score = minimax(board, 0, false);
+                board[row][col] = ' ';
+                if (score > bestScore) {
+                    bestScore = score;
+                    move = [row, col];
+                }
+            }
+            return move;
+        }
+
+        function drawBoard() {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, 600, 600);
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = LINE_WIDTH;
+            for (let i = 1; i < GRID_SIZE; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * CELL_SIZE, 0);
+                ctx.lineTo(i * CELL_SIZE, 600);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i * CELL_SIZE);
+                ctx.lineTo(600, i * CELL_SIZE);
+                ctx.stroke();
+            }
+            for (let row = 0; row < GRID_SIZE; row++) {
+                for (let col = 0; col < GRID_SIZE; col++) {
+                    if (board[row][col] === 'X') {
+                        drawX(row, col);
+                    } else if (board[row][col] === 'O') {
+                        drawO(row, col);
+                    }
+                }
+            }
+            if (gameOver) {
+                showGameOver();
+            }
+        }
+
+        function drawX(row, col) {
+            const margin = CELL_SIZE / 4;
+            const startX = col * CELL_SIZE + margin;
+            const startY = row * CELL_SIZE + margin;
+            const endX = (col + 1) * CELL_SIZE - margin;
+            const endY = (row + 1) * CELL_SIZE - margin;
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = LINE_WIDTH;
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(startX, endY);
+            ctx.lineTo(endX, startY);
+            ctx.stroke();
+        }
+
+        function drawO(row, col) {
+            const centerX = col * CELL_SIZE + CELL_SIZE / 2;
+            const centerY = row * CELL_SIZE + CELL_SIZE / 2;
+            const radius = CELL_SIZE / 4;
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = LINE_WIDTH;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.stroke();
+        }
+
+        function showGameOver() {
+            const gameOverDiv = document.getElementById('game-over');
+            const restartBtn = document.getElementById('restart-btn');
+            gameOverDiv.style.display = 'block';
+            restartBtn.style.display = 'block';
+            if (winner === 'X') {
+                gameOverDiv.innerText = 'Player wins!';
+            } else if (winner === 'O') {
+                gameOverDiv.innerText = 'AI wins!';
+            } else {
+                gameOverDiv.innerText = 'Tie!';
+            }
+        }
+
+        function resetBoard() {
+            board = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']];
+            gameOver = false;
+            winner = null;
+            document.getElementById('game-over').style.display = 'none';
+            document.getElementById('restart-btn').style.display = 'none';
+            drawBoard();
+        }
+
+        canvas.addEventListener('click', (event) => {
+            if (gameOver) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            const row = Math.floor(y / CELL_SIZE);
+            const col = Math.floor(x / CELL_SIZE);
+            if (row >= 0 && row < 3 && col >= 0 && col < 3 && board[row][col] === ' ') {
+                board[row][col] = 'X';
+                if (isWinner(board, 'X')) {
+                    gameOver = true;
+                    winner = 'X';
+                } else if (isBoardFull(board)) {
+                    gameOver = true;
+                    winner = null;
+                } else {
+                    let move = bestMove(board);
+                    if (move) {
+                        board[move[0]][move[1]] = 'O';
+                        if (isWinner(board, 'O')) {
+                            gameOver = true;
+                            winner = 'O';
+                        } else if (isBoardFull(board)) {
+                            gameOver = true;
+                            winner = null;
+                        }
+                    }
+                }
+                drawBoard();
+            }
+        });
+
+        document.getElementById('restart-btn').addEventListener('click', resetBoard);
+
+        drawBoard();
+    </script>
+</body>
+</html>
+
