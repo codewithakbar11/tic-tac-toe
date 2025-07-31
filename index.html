@@ -45,6 +45,32 @@
         #restart-btn:hover {
             background-color: #b4b4b4;
         }
+        #choice-screen {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -30%);
+            background-color: white;
+            border: 2px solid black;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+        }
+        .choice-button {
+            margin-top: 20px;
+            width: 200px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            border: 2px solid black;
+            background-color: #ddd;
+        }
+        .choice-button:hover {
+            background-color: #c5c5c5;
+        }
     </style>
 </head>
 <body>
@@ -52,6 +78,11 @@
         <canvas id="game" width="600" height="600"></canvas>
         <div id="game-over"></div>
         <button id="restart-btn">Restart</button>
+        <div id="choice-screen">
+            <div>Do you want to go first?</div>
+            <button id="human-first" class="choice-button">Yes (You First)</button>
+            <button id="ai-first" class="choice-button">No (AI First)</button>
+        </div>
     </div>
     <script>
         const canvas = document.getElementById('game');
@@ -240,10 +271,29 @@
             }
         });
 
-        document.getElementById('restart-btn').addEventListener('click', resetBoard);
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            resetBoard();
+            document.getElementById('choice-screen').style.display = 'block';
+        });
+
+        document.getElementById('human-first').addEventListener('click', () => {
+            document.getElementById('choice-screen').style.display = 'none';
+            drawBoard();
+        });
+
+        document.getElementById('ai-first').addEventListener('click', () => {
+    document.getElementById('choice-screen').style.display = 'none';
+    let empty = getEmptyCells(board);
+    if (empty.length > 0) {
+        let randomIndex = Math.floor(Math.random() * empty.length);
+        let [row, col] = empty[randomIndex];
+        board[row][col] = 'O';
+    }
+    drawBoard();
+});
+
 
         drawBoard();
     </script>
 </body>
 </html>
-
